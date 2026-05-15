@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Controle de Ponto" />
+  <meta name="theme-color" content="#1a3a2a" />
+  <title>Controle de Ponto</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark: #1a3a2a;
+      --green-mid: #224d38;
+      --green-deep: #112b1e;
+      --green-accent: #6fcf97;
+      --green-muted: #9dc8b0;
+      --green-light: #e6f7ed;
+      --green-pale: #f0faf4;
+      --green-text: #1a4a2e;
+      --gray-bg: #f5f5f3;
+      --gray-card: #ffffff;
+      --gray-border: rgba(0,0,0,0.10);
+      --gray-border-strong: rgba(0,0,0,0.18);
+      --text-primary: #111;
+      --text-secondary: #555;
+      --text-muted: #888;
+      --danger: #c0392b;
+      --danger-bg: #fdf2f2;
+      --danger-border: rgba(192,57,43,0.25);
+    }
+
+    html { height: 100%; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-bg);
+      min-height: 100vh;
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: var(--gray-card);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--green-dark);
+      padding: 1.1rem 1.25rem 0.9rem;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0.2rem;
+    }
+    .header-top i { font-size: 20px; color: var(--green-accent); }
+    .header-title { font-size: 16px; font-weight: 600; color: #fff; }
+    .header-sub { font-size: 12px; color: var(--green-muted); }
+
+    .datetime-bar {
+      background: var(--green-deep);
+      padding: 0.55rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dt-item { display: flex; align-items: center; gap: 5px; }
+    .dt-item i { font-size: 14px; color: var(--green-muted); }
+    .dt-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: #e0ffe8;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── BODY ── */
+    .body { padding: 1.25rem; flex: 1; }
+
+    /* ── WEBHOOK BANNER ── */
+    .webhook-banner {
+      background: var(--green-pale);
+      border: 0.5px solid #b2dfc5;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.1rem;
+    }
+    .webhook-banner p {
+      font-size: 12px;
+      color: var(--green-text);
+      line-height: 1.55;
+    }
+    .webhook-banner code {
+      font-family: 'DM Mono', monospace;
+      font-size: 10.5px;
+      background: rgba(0,0,0,0.06);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* ── FIELD ── */
+    .field-row { margin-bottom: 1.1rem; }
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .field-label .required { color: var(--danger); }
+
+    input[type="text"],
+    input[type="url"],
+    select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--gray-border);
+      background: #fafaf9;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="text"]:focus,
+    input[type="url"]:focus,
+    select:focus {
+      border-color: var(--green-dark);
+      box-shadow: 0 0 0 3px rgba(26,58,42,0.10);
+      background: #fff;
+    }
+    input.input-error { border-color: var(--danger) !important; box-shadow: 0 0 0 3px rgba(192,57,43,0.09) !important; }
+
+    .error-msg {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 5px;
+      display: none;
+      align-items: center;
+      gap: 4px;
+    }
+    .error-msg.show { display: flex; }
+
+    /* ── CAMERA ZONE ── */
+    .camera-zone {
+      border: 1.5px dashed var(--gray-border-strong);
+      border-radius: 12px;
+      background: #fafaf9;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: border-color 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .camera-zone:hover,
+    .camera-zone:active { border-color: var(--green-dark); background: var(--green-pale); }
+    .camera-zone.zone-error { border-color: var(--danger); background: var(--danger-bg); }
+
+    .cam-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 1.5rem; }
+    .cam-placeholder i { font-size: 40px; color: var(--green-dark); }
+    .cam-placeholder p { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+    .cam-placeholder small { font-size: 12px; color: var(--text-muted); }
+
+    #preview-img {
+      width: 100%;
+      display: none;
+      object-fit: cover;
+      max-height: 240px;
+      border-radius: 10px;
+    }
+    .photo-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(26,58,42,0.82);
+      color: #fff;
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 5px;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+    }
+    .retake-btn {
+      margin-top: 8px;
+      background: none;
+      border: 1px solid var(--gray-border-strong);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.1s;
+    }
+    .retake-btn:hover { background: #f0f0ee; }
+
+    /* ── DIVIDER ── */
+    hr.divider { border: none; border-top: 0.5px solid var(--gray-border); margin: 1.1rem 0; }
+
+    /* ── MAIN BUTTON ── */
+    .btn-ponto {
+      width: 100%;
+      padding: 1.1rem 1rem;
+      background: var(--green-dark);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.01em;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-ponto:hover { background: var(--green-mid); }
+    .btn-ponto:active { transform: scale(0.98); background: #1c4530; }
+    .btn-ponto:disabled { background: #aaa; cursor: not-allowed; transform: none; }
+    .btn-ponto i { font-size: 22px; }
+
+    /* ── STATUS ── */
+    .status-msg {
+      font-size: 12.5px;
+      text-align: center;
+      margin-top: 8px;
+      min-height: 18px;
+      color: var(--text-muted);
+    }
+    .status-msg.ok { color: #1a7a42; font-weight: 500; }
+    .status-msg.err { color: var(--danger); }
+    .status-msg.sending { color: var(--green-dark); }
+
+    /* ── RECORDS ── */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .records-list { display: flex; flex-direction: column; gap: 8px; }
+    .record-item {
+      background: #fafaf9;
+      border: 0.5px solid var(--gray-border);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rec-name { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
+    .rec-meta { font-size: 11.5px; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+    .rec-badge {
+      font-size: 11px;
+      background: var(--green-light);
+      color: var(--green-text);
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .rec-obra { font-size: 11px; color: var(--text-muted); margin-top: 3px; text-align: right; }
+    .empty-state { text-align: center; padding: 1.5rem 0; color: var(--text-muted); font-size: 13px; }
+    .empty-state i { font-size: 28px; display: block; margin-bottom: 6px; color: #ccc; }
+
+    /* ── SUCCESS SCREEN ── */
+    #success-screen {
+      display: none;
+      padding: 2rem 1.25rem 1.5rem;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+    .success-icon {
+      width: 76px;
+      height: 76px;
+      background: var(--green-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .success-icon i { font-size: 40px; color: #1a9e55; }
+    .success-title { font-size: 21px; font-weight: 600; color: var(--text-primary); }
+    .success-sub { font-size: 13px; color: var(--text-muted); margin-top: -6px; }
+    .success-card {
+      background: #fafaf9;
+      border: 0.5px solid var(--gray-border);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      width: 100%;
+    }
+    .success-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      font-size: 13px;
+      border-bottom: 0.5px solid var(--gray-border);
+    }
+    .success-row:last-of-type { border-bottom: none; }
+    .success-row .lbl { color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+    .success-row .val { font-weight: 500; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-primary); text-align: right; max-width: 55%; word-break: break-word; }
+    .success-photo { width: 100%; border-radius: 8px; object-fit: cover; max-height: 200px; display: block; margin-top: 10px; }
+    .btn-secondary {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: none;
+      border: 1.5px solid var(--green-dark);
+      color: var(--green-dark);
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-secondary:hover { background: var(--green-pale); }
+
+    /* ── CAMERA MODAL ── */
+    #video-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 1rem;
+    }
+    #video-modal.open { display: flex; }
+    #cam-video {
+      width: 100%;
+      max-width: 400px;
+      border-radius: 14px;
+      background: #111;
+      max-height: 65vh;
+      object-fit: cover;
+    }
+    .cam-hint { font-size: 13px; color: rgba(255,255,255,0.55); text-align: center; }
+    .cam-controls { display: flex; gap: 20px; align-items: center; }
+    .cam-capture {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #fff;
+      border: 4px solid rgba(255,255,255,0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cam-capture:active { transform: scale(0.92); }
+    .cam-capture i { font-size: 28px; color: var(--green-dark); }
+    .cam-cancel {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    canvas { display: none; }
+
+    /* ── SPINNER ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.9s linear infinite; display: inline-block; }
+
+    /* ── FOOTER ── */
+    .footer {
+      padding: 0.75rem 1.25rem;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 0.5px solid var(--gray-border);
+      background: #fafaf9;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <i class="ti ti-building-community"></i>
+      <span class="header-title">Controle de Ponto</span>
+    </div>
+    <div class="header-sub">Registro de presença em campo</div>
+  </div>
+
+  <!-- DATETIME BAR -->
+  <div class="datetime-bar">
+    <div class="dt-item"><i class="ti ti-calendar"></i><span class="dt-val" id="cur-date">--/--/----</span></div>
+    <div class="dt-item"><i class="ti ti-clock"></i><span class="dt-val" id="cur-time">--:--:--</span></div>
+  </div>
+
+  <!-- FORM SCREEN -->
+  <div id="form-screen" class="body">
+
+    <div class="webhook-banner">
+      <p><strong>Integração automática:</strong> Cole abaixo a URL do seu webhook (Power Automate, Make.com ou Google Apps Script) para enviar os dados direto para sua planilha.</p>
+    </div>
+
+    <div class="field-row">
+      <div class="field-label"><i class="ti ti-link" style="font-size:13px;"></i> URL do Webhook <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span></div>
+      <input type="url" id="webhook-url" placeholder="https://..." autocomplete="off" />
+    </div>
+
+    <hr class="divider" />
+
+    <div class="field-row">
+      <div class="field-label"><i class="ti ti-user" style="font-size:13px;"></i> Nome do funcionário <span class="required">*</span></div>
+      <input type="text" id="nome" placeholder="Digite seu nome completo" autocomplete="name" />
+      <div class="error-msg" id="err-nome"><i class="ti ti-alert-circle"></i> Campo obrigatório</div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-label"><i class="ti ti-tag" style="font-size:13px;"></i> Tipo de registro <span class="required">*</span></div>
+      <select id="tipo">
+        <option value="Entrada">🟢 Entrada</option>
+        <option value="Saída Almoço">🟡 Saída Almoço</option>
+        <option value="Retorno Almoço">🟠 Retorno Almoço</option>
+        <option value="Saída">🔴 Saída</option>
+      </select>
+    </div>
+
+    <div class="field-row">
+      <div class="field-label"><i class="ti ti-building" style="font-size:13px;"></i> Obra / Local</div>
+      <input type="text" id="obra" placeholder="Ex: Kingsbury Towers – Bloco A" autocomplete="off" />
+    </div>
+
+    <div class="field-row">
+      <div class="field-label"><i class="ti ti-camera" style="font-size:13px;"></i> Foto de comprovação <span class="required">*</span></div>
+      <div class="camera-zone" id="camera-zone" onclick="openCamera()" role="button" tabindex="0" aria-label="Abrir câmera para tirar foto">
+        <img id="preview-img" alt="Foto capturada" />
+        <div class="photo-badge" id="photo-badge"><i class="ti ti-check"></i> Foto capturada</div>
+        <div class="cam-placeholder" id="cam-placeholder">
+          <i class="ti ti-camera-plus"></i>
+          <p>Toque para abrir câmera</p>
+          <small>Foto obrigatória para registrar o ponto</small>
+        </div>
+      </div>
+      <div class="error-msg" id="err-foto"><i class="ti ti-alert-circle"></i> Foto obrigatória</div>
+      <button class="retake-btn" id="retake-btn" onclick="retakePhoto()" type="button">
+        <i class="ti ti-refresh" style="font-size:13px;"></i> Refazer foto
+      </button>
+    </div>
+
+    <button class="btn-ponto" id="btn-ponto" onclick="baterPonto()" type="button">
+      <i class="ti ti-fingerprint"></i>
+      Bater Ponto
+    </button>
+
+    <div class="status-msg" id="status-msg"></div>
+
+    <hr class="divider" style="margin-top:1.5rem;" />
+
+    <div class="section-title">
+      <i class="ti ti-history" style="font-size:14px;"></i>
+      Registros desta sessão
+    </div>
+    <div class="records-list" id="records-list">
+      <div class="empty-state"><i class="ti ti-inbox"></i>Nenhum registro ainda</div>
+    </div>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div id="success-screen">
+    <div class="success-icon"><i class="ti ti-circle-check"></i></div>
+    <div class="success-title">Ponto Registrado!</div>
+    <div class="success-sub" id="success-sub">Aguardando confirmação de envio...</div>
+    <div class="success-card" id="success-card"></div>
+    <button class="btn-ponto" style="margin-top:0;" onclick="novoRegistro()" type="button">
+      <i class="ti ti-plus"></i> Novo Registro
+    </button>
+    <button class="btn-secondary" onclick="exportarCSV()" type="button">
+      <i class="ti ti-table-export" style="font-size:18px;"></i> Exportar CSV
+    </button>
+  </div>
+
+  <div class="footer">
+    Controle de Ponto &nbsp;·&nbsp; Dados salvos localmente neste dispositivo
+  </div>
+</div>
+
+<!-- CAMERA MODAL -->
+<div id="video-modal" role="dialog" aria-modal="true" aria-label="Câmera">
+  <video id="cam-video" autoplay playsinline muted></video>
+  <div class="cam-hint">Posicione o rosto na câmera e capture</div>
+  <div class="cam-controls">
+    <button class="cam-cancel" onclick="closeCamera()" type="button">Cancelar</button>
+    <button class="cam-capture" onclick="capturePhoto()" type="button" aria-label="Capturar foto">
+      <i class="ti ti-camera"></i>
+    </button>
+  </div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+  /* ─── STATE ─── */
+  let photoDataUrl = null;
+  let mediaStream = null;
+  let sessionRecords = [];
+
+  /* ─── CLOCK ─── */
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('cur-date').textContent = now.toLocaleDateString('pt-BR');
+    document.getElementById('cur-time').textContent = now.toLocaleTimeString('pt-BR');
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  /* ─── CAMERA ─── */
+  function openCamera() {
+    const modal = document.getElementById('video-modal');
+    modal.classList.add('open');
+    const constraints = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    };
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(stream => {
+        mediaStream = stream;
+        document.getElementById('cam-video').srcObject = stream;
+      })
+      .catch(err => {
+        modal.classList.remove('open');
+        if (err.name === 'NotAllowedError') {
+          alert('Acesso à câmera negado.\n\nVá em Configurações do navegador > Permissões > Câmera e permita o acesso para este site.');
+        } else if (err.name === 'NotFoundError') {
+          alert('Câmera não encontrada neste dispositivo.');
+        } else {
+          alert('Não foi possível acessar a câmera: ' + err.message);
+        }
+      });
+  }
+
+  function closeCamera() {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(t => t.stop());
+      mediaStream = null;
+    }
+    document.getElementById('cam-video').srcObject = null;
+    document.getElementById('video-modal').classList.remove('open');
+  }
+
+  function capturePhoto() {
+    const video = document.getElementById('cam-video');
+    const canvas = document.getElementById('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+
+    /* Mirror front camera */
+    const isFront = !!(mediaStream &&
+      mediaStream.getVideoTracks()[0] &&
+      mediaStream.getVideoTracks()[0].getSettings().facingMode === 'user');
+    if (isFront) {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(video, 0, 0);
+
+    /* Timestamp watermark */
+    const now = new Date();
+    const stamp = now.toLocaleString('pt-BR');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.font = `bold ${Math.max(14, canvas.width * 0.025)}px monospace`;
+    const pad = 10;
+    const tw = ctx.measureText(stamp).width + pad * 2;
+    const th = Math.max(14, canvas.width * 0.025) + pad * 2;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(8, canvas.height - th - 8, tw, th);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(stamp, 8 + pad, canvas.height - 8 - pad * 0.5);
+
+    photoDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    closeCamera();
+
+    const img = document.getElementById('preview-img');
+    img.src = photoDataUrl;
+    img.style.display = 'block';
+    document.getElementById('cam-placeholder').style.display = 'none';
+    document.getElementById('photo-badge').style.display = 'flex';
+    document.getElementById('retake-btn').style.display = 'flex';
+    document.getElementById('camera-zone').classList.remove('zone-error');
+    document.getElementById('err-foto').classList.remove('show');
+  }
+
+  function retakePhoto() {
+    photoDataUrl = null;
+    document.getElementById('preview-img').style.display = 'none';
+    document.getElementById('cam-placeholder').style.display = 'flex';
+    document.getElementById('photo-badge').style.display = 'none';
+    document.getElementById('retake-btn').style.display = 'none';
+    openCamera();
+  }
+
+  /* ─── BATER PONTO ─── */
+  async function baterPonto() {
+    const nome = document.getElementById('nome').value.trim();
+    const tipo = document.getElementById('tipo').value;
+    const obra = document.getElementById('obra').value.trim();
+    const webhookUrl = document.getElementById('webhook-url').value.trim();
+    let valid = true;
+
+    /* Validate nome */
+    const nomeInput = document.getElementById('nome');
+    if (!nome) {
+      nomeInput.classList.add('input-error');
+      document.getElementById('err-nome').classList.add('show');
+      valid = false;
+    } else {
+      nomeInput.classList.remove('input-error');
+      document.getElementById('err-nome').classList.remove('show');
+    }
+
+    /* Validate foto */
+    if (!photoDataUrl) {
+      document.getElementById('camera-zone').classList.add('zone-error');
+      document.getElementById('err-foto').classList.add('show');
+      valid = false;
+    }
+
+    if (!valid) {
+      /* Scroll to first error */
+      const firstErr = document.querySelector('.input-error, .zone-error');
+      if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const now = new Date();
+    const data = now.toLocaleDateString('pt-BR');
+    const hora = now.toLocaleTimeString('pt-BR');
+    const ts = now.toISOString();
+
+    /* Disable button */
+    const btn = document.getElementById('btn-ponto');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> Registrando...';
+
+    /* Build record */
+    const record = { nome, tipo, obra: obra || '—', data, hora, ts, foto: photoDataUrl };
+    sessionRecords.unshift(record);
+
+    /* Send to webhook */
+    const statusEl = document.getElementById('status-msg');
+    let webhookOk = false;
+    if (webhookUrl) {
+      statusEl.textContent = 'Enviando para planilha...';
+      statusEl.className = 'status-msg sending';
+      try {
+        const payload = {
+          nome, tipo, obra: obra || '',
+          data, hora, timestamp_iso: ts,
+          foto_base64: photoDataUrl
+        };
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          mode: 'no-cors'
+        });
+        webhookOk = true;
+      } catch (e) {
+        webhookOk = false;
+      }
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-fingerprint"></i> Bater Ponto';
+
+    showSuccess(record, webhookUrl, webhookOk);
+    renderRecords();
+  }
+
+  /* ─── SUCCESS SCREEN ─── */
+  function showSuccess(r, webhookUrl, webhookOk) {
+    document.getElementById('form-screen').style.display = 'none';
+    const screen = document.getElementById('success-screen');
+    screen.style.display = 'flex';
+
+    let subText = '';
+    if (webhookUrl) {
+      subText = webhookOk
+        ? '✓ Enviado para planilha automaticamente'
+        : '⚠ Não foi possível enviar. Exportar CSV manualmente.';
+    } else {
+      subText = 'Sem webhook – use Exportar CSV para salvar.';
+    }
+    document.getElementById('success-sub').textContent = subText;
+    document.getElementById('success-sub').style.color =
+      (webhookUrl && webhookOk) ? '#1a7a42' : (!webhookUrl ? '#888' : '#c0392b');
+
+    document.getElementById('success-card').innerHTML = `
+      <div class="success-row">
+        <span class="lbl"><i class="ti ti-user" style="font-size:13px;"></i> Funcionário</span>
+        <span class="val">${r.nome}</span>
+      </div>
+      <div class="success-row">
+        <span class="lbl"><i class="ti ti-tag" style="font-size:13px;"></i> Tipo</span>
+        <span class="val">${r.tipo}</span>
+      </div>
+      <div class="success-row">
+        <span class="lbl"><i class="ti ti-building" style="font-size:13px;"></i> Obra</span>
+        <span class="val">${r.obra}</span>
+      </div>
+      <div class="success-row">
+        <span class="lbl"><i class="ti ti-calendar" style="font-size:13px;"></i> Data</span>
+        <span class="val">${r.data}</span>
+      </div>
+      <div class="success-row">
+        <span class="lbl"><i class="ti ti-clock" style="font-size:13px;"></i> Hora</span>
+        <span class="val">${r.hora}</span>
+      </div>
+      <img src="${r.foto}" class="success-photo" alt="Foto de comprovação" />
+    `;
+  }
+
+  /* ─── NOVO REGISTRO ─── */
+  function novoRegistro() {
+    photoDataUrl = null;
+    document.getElementById('preview-img').style.display = 'none';
+    document.getElementById('cam-placeholder').style.display = 'flex';
+    document.getElementById('photo-badge').style.display = 'none';
+    document.getElementById('retake-btn').style.display = 'none';
+    document.getElementById('camera-zone').classList.remove('zone-error');
+    document.getElementById('nome').value = '';
+    document.getElementById('obra').value = '';
+    document.getElementById('nome').classList.remove('input-error');
+    document.getElementById('err-nome').classList.remove('show');
+    document.getElementById('err-foto').classList.remove('show');
+    document.getElementById('status-msg').textContent = '';
+    document.getElementById('success-screen').style.display = 'none';
+    document.getElementById('form-screen').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ─── RECORDS LIST ─── */
+  function renderRecords() {
+    const list = document.getElementById('records-list');
+    if (!list) return;
+    if (!sessionRecords.length) {
+      list.innerHTML = '<div class="empty-state"><i class="ti ti-inbox"></i>Nenhum registro ainda</div>';
+      return;
+    }
+    list.innerHTML = sessionRecords.slice(0, 8).map(r => `
+      <div class="record-item">
+        <div>
+          <div class="rec-name">${r.nome}</div>
+          <div class="rec-meta">${r.data} &nbsp;·&nbsp; ${r.hora}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="rec-badge">${r.tipo}</div>
+          <div class="rec-obra">${r.obra}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ─── EXPORT CSV ─── */
+  function exportarCSV() {
+    if (!sessionRecords.length) { alert('Nenhum registro para exportar.'); return; }
+    const BOM = '\uFEFF';
+    const header = 'Nome,Tipo,Obra,Data,Hora,Timestamp ISO\n';
+    const rows = sessionRecords.map(r =>
+      `"${r.nome}","${r.tipo}","${r.obra}","${r.data}","${r.hora}","${r.ts}"`
+    ).join('\n');
+    const blob = new Blob([BOM + header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const today = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+    a.download = `ponto_${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /* ─── KEYBOARD ACCESS ─── */
+  document.getElementById('camera-zone').addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCamera(); }
+  });
+
+  /* ─── INIT ─── */
+  renderRecords();
+</script>
+</body>
+</html>
